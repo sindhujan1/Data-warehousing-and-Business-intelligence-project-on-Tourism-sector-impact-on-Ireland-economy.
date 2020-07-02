@@ -1,0 +1,155 @@
+# ###################### SQL QUERY ##########################
+#for dimensional table creation
+
+IF OBJECT _ID('FACT _ TABLE ', 'U') IS NOT NULL
+DROP TABLE FACT _ TABLE ;
+
+IF OBJECT _ID('DIMYEAR ', 'U') IS NOT NULL
+DROP TABLE DIMYEAR ;
+CREATE TABLE [dbo ].[ DIMYEAR ](
+[ YEAR _ID] int identity (1,1) NOT NULL PRIMARY KEY ,
+[ YEAR ] [ smallint ] NULL )
+ON [ PRIMARY ]
+GO
+INSERT INTO [dbo ].[ DIMYEAR ](
+[ YEAR ])
+Select distinct YEAR from RAWEMP ;
+IF OBJECT _ID('DIMLOCATION ', 'U') IS NOT NULL
+DROP TABLE DIMLOCATION ;
+CREATE TABLE [dbo ].[ DIMLOCATION ](
+[ LOCATION _ID] int identity (1,1) NOT NULL PRIMARY KEY ,
+[ AREA OF RESIDENCE ] [ varchar ](40) NULL )
+ON [ PRIMARY ]
+GO
+INSERT INTO [dbo ].[ DIMLOCATION ](
+[ AREA OF RESIDENCE ])
+Select distinct [ AREA OF RESIDENCE ] from RAWTRIPS ;
+IF OBJECT _ID('DIMSITES ', 'U') IS NOT NULL
+DROP TABLE DIMSITES ;
+CREATE TABLE [dbo ].[ DIMSITES ](
+[ SITE _ID] int identity (1,1) NOT NULL PRIMARY KEY ,
+[ ATTRACTION ] [ varchar ](29) NULL ,
+[ COUNTY ] [ varchar ](10) NULL )
+ON [ PRIMARY ]
+GO
+INSERT INTO [dbo ].[ DIMSITES ](
+[ ATTRACTION ] ,[ COUNTY ])
+Select DISTINCT [ ATTRACTION ] ,[ COUNTY ] from RAWSITES ;
+IF OBJECT _ID('DIMGENDER ', 'U') IS NOT NULL
+DROP TABLE DIMGENDER ;
+CREATE TABLE [dbo ].[ DIMGENDER ](
+[ GENDER _ID] int identity (1,1) NOT NULL PRIMARY KEY ,
+[ GENDER ] [ varchar ](50) NULL )
+ON [ PRIMARY ]
+GO
+INSERT INTO [dbo ].[ DIMGENDER ](
+[ GENDER ])
+Select distinct GENDER from RAWEMP ;
+IF OBJECT _ID('DIMTRAVEL ', 'U') IS NOT NULL
+DROP TABLE DIMTRAVEL ;
+CREATE TABLE [dbo ].[ DIMTRAVEL ](
+[ TRAVEL _ID] int identity (1,1) NOT NULL PRIMARY KEY ,
+[ REGION ] [ varchar ](50) NULL ,
+[ PURPOSE ] [ varchar ](50) NULL ,
+[ DURATION ] [ varchar ](50) NULL )
+ON [ PRIMARY ]
+GO
+INSERT INTO [dbo ].[ DIMTRAVEL ](
+[ REGION ],[ PURPOSE ],[ DURATION ])
+Select distinct [ REGION ],[ PURPOSE ],[ DURATION ] from RAWEXP ;
+IF OBJECT _ID('DIMEMP _ SECTOR ', 'U') IS NOT NULL
+DROP TABLE DIMEMP _ SECTOR ;
+CREATE TABLE [dbo ].[ DIMEMP _ SECTOR ](
+[EMP_ID] [int] identity (1,1) NOT NULL PRIMARY KEY ,
+[ EMPLOYMENT _ SECTOR ] [ varchar ](71) NULL )
+ON [ PRIMARY ]
+GO
+INSERT INTO [dbo ].[ DIMEMP _ SECTOR ](
+[ EMPLOYMENT _ SECTOR ])
+Select distinct [ EMPLOYMENT _ SECTOR ] from RAWEMP ;
+#for fact table creation
+USE [ TourismIre ]
+GO
+IF OBJECT _ID('FACT _ TABLE ', 'U') IS NOT NULL
+DROP TABLE FACT _ TABLE ;
+/****** Object : Table [dbo ].[ DIMEMP _ SECTOR ] Script Date :
+13/11/2018 18:31:58 ******/
+SET ANSI _ NULLS ON
+GO
+SET QUOTED _ IDENTIFIER ON
+GO
+CREATE TABLE [dbo ].[ FACT _ TABLE ](
+[EMP_ID] [int] NOT NULL FOREIGN KEY REFERENCES
+[dbo ].[ DIMEMP _ SECTOR ]( EMP_ID),
+[ GENDER _ID] [int] NOT NULL FOREIGN KEY REFERENCES
+DIMGENDER ( GENDER _ID),
+[ LOCATION _ID] [int] NOT NULL FOREIGN KEY REFERENCES
+DIMLOCATION ( LOCATION _ID),
+[ SITE _ID] [int] NOT NULL FOREIGN KEY REFERENCES
+DIMSITES ( SITE _ID),
+[ TRAVEL _ID] [int] NOT NULL FOREIGN KEY REFERENCES
+DIMTRAVEL ( TRAVEL _ID),
+[ YEAR _ID] [int] NOT NULL FOREIGN KEY REFERENCES
+DIMYEAR ( YEAR _ID),
+[ EMPLOYED ( PEOPLE )] [int] NULL ,
+[ VALUE ( EUROS )] [ numeric ](18, 2) NULL ,
+[GDP in billion euros ] [ real ] NULL ,
+[GDP per capita ( EUROS )] [ real ] NULL ,
+[ REVENUE ( EUROS )] [ numeric ](18, 2) NULL ,
+[ VISITORS ] [int] NULL ,
+[ TRIPS ] [int] NULL
+) ON [ PRIMARY ]
+GO
+INSERT INTO [dbo ].[ FACT _ TABLE ]
+([ EMP_ID]
+,[ GENDER _ID]
+,[ LOCATION _ID]
+,[ SITE _ID]
+,[ TRAVEL _ID]
+,[ YEAR _ID]
+,[ EMPLOYED ( PEOPLE )]
+,[ VALUE ( EUROS )]
+,[ GDP in billion euros ]
+,[ GDP per capita ( EUROS )]
+,[ REVENUE ( EUROS )]
+,[ VISITORS ]
+,[ TRIPS ])
+Select distinct j.[ EMP _ID]
+,[ GENDER _ID]
+,[ LOCATION _ID]
+,l.[ SITE _ID]
+,[ TRAVEL _ID]
+,[ YEAR _ID]
+,[ EMPLOYED ( PEOPLE )]
+,[ VALUE ( EUROS )]
+,[ GDP in billion euros ]
+,[ GDP per capita ( EUROS )]
+,[ REVENUE ( EUROS )]
+,[ VISITORS ]
+,[ TRIPS ]
+From [dbo ].[ RAWEXP ] a
+join [ dbo ].[ RAWEMP ] b
+on a. YEAR = b. YEAR and a. GENDER = b. GENDER
+join [ dbo ].[ RAWGDP ] c
+on a. YEAR = c. YEAR
+join [ dbo ].[ RAWREV ] d
+on a. YEAR = d. YEAR
+Join [ dbo ].[ RAWSITES ] e
+on a. YEAR = e. YEAR
+Join [ dbo ].[ RAWTRIPS ] f
+on a. YEAR = f. YEAR
+join [ dbo ].[ DIMGENDER ] g
+on a. GENDER = g. GENDER
+join [ dbo ].[ DIMTRAVEL ] h
+on a. REGION = h. REGION and h. PURPOSE = a. PURPOSE
+join [ dbo ].[ DIMYEAR ] i
+on a. YEAR = i. YEAR
+join [ dbo ].[ DIMEMP _ SECTOR ] j
+on b. EMPLOYMENT _ SECTOR = j. EMPLOYMENT _ SECTOR
+join [ dbo ].[ DIMLOCATION ] k
+on f.[ AREA OF RESIDENCE ] = k.[ AREA OF RESIDENCE ]
+join [ dbo ].[ DIMSITES ] l
+on l. ATTRACTION = e. ATTRACTION
+join [ dbo ].[ DIMSITES ] m
+on m. COUNTY = e. COUNTY
+GO
